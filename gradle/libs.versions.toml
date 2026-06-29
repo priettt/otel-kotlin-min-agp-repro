@@ -1,0 +1,32 @@
+# REPRODUCER for opentelemetry-kotlin — pinned at the library's DECLARED minimums
+# (AGP 8.0.0, Gradle 8.0, Kotlin 2.0.0, minSdk 21, compileSdk 34), at which `./gradlew build` FAILS.
+# Root cause: AGP 8.0.0 bundles R8 8.0.35, whose @kotlin.Metadata rewriter can't parse Kotlin 2.0's
+# bumped metadata version -> uncaught D8 crash "com.android.tools.r8.internal.yw" (dexing, minSdk <= 23).
+# FIX: bump `agp` to 8.0.1 (R8 8.0.40 catches it -> builds). Full matrix in README.md.
+[versions]
+agp = "8.0.0"            # the single broken AGP patch; change to "8.0.1" to make the build pass
+android-compileSdk = "34"
+android-minSdk = "21"    # library's declared floor; crash fires at minSdk <= 23 on stock AGP 8.0.0
+android-targetSdk = "34"
+androidx-activityCompose = "1.9.0"
+composeMultiplatform = "1.6.11"
+kotlin = "2.0.0"
+# OTel Kotlin SDK (published to mavenLocal via ./gradlew publishToMavenLocal -PsnapshotPublish=true)
+otel = "0.5.0-SNAPSHOT"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+# --- OpenTelemetry Kotlin (added later to break the iOS/JS build on Kotlin 2.0) ---
+otel-api = { module = "io.opentelemetry.kotlin:api", version.ref = "otel" }
+otel-sdkApi = { module = "io.opentelemetry.kotlin:sdk-api", version.ref = "otel" }
+otel-core = { module = "io.opentelemetry.kotlin:core", version.ref = "otel" }
+otel-implementation = { module = "io.opentelemetry.kotlin:implementation", version.ref = "otel" }
+otel-exportersCore = { module = "io.opentelemetry.kotlin:exporters-core", version.ref = "otel" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
